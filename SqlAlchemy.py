@@ -30,7 +30,7 @@ class User(db.Model):
     posts = db.relationship("Post", backref="author", lazy=True)  # one-to-many relationship
     
     def __repr__(self):
-        return f"User {self.id}: {self.name}, posts: {self.posts}"
+        return f"<User {self.id}>: {self.name}, posts: {self.posts}"
     
     
 class Post(db.Model):
@@ -42,7 +42,7 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     
     def __repr__(self):
-        return f"Post {self.id}: {self.title}"
+        return f"<Post {self.id}>: {self.title}"
     
 #==========================
 # Many-to-many relationship
@@ -65,7 +65,7 @@ class Viewer(db.Model):
     following = db.relationship("Channel", secondary=viewer_channel, backref="followers")
     
     def __repr__(self):
-        return f"Viewer {self.id}: {self.name}, following: {self.following}"
+        return f"<Viewer {self.id}>: {self.name}, following: {self.following}"
 
 
 class Channel(db.Model):
@@ -73,7 +73,7 @@ class Channel(db.Model):
     name = db.Column(db.String(20), nullable=False)
     
     def __repr__(self) -> str:
-        return f"Channel {self.id}: {self.name}"
+        return f"<Channel {self.id}>: {self.name}"
             
 #=========================
 # Joined Table Inheritance (?)
@@ -92,9 +92,10 @@ class Item(db.Model):
     item_type = db.Column(db.String(20), nullable=False)
     sub_item_id = db.Column(db.Integer, nullable=False)
     inventory_serial = db.Column(db.String(20), nullable=False)
+    is_availabile = db.Column(db.Boolean, nullable=False, default=True)
     
     def __repr__(self):
-        return f"Item type: {self.item_type}, serial: {self.inventory_serial}"
+        return f"<Item {self.id}>: type: {self.item_type}, serial: {self.inventory_serial}"
     
 
 class Book(db.Model):
@@ -115,7 +116,7 @@ class Book(db.Model):
     # items = db.relationship("Item", backref="book", lazy=True, primaryjoin="foreign(Item.sub_item_id) == Book.id and Item.item_type == 'book'")
     
     def __repr__(self) -> str:
-        return f"Book: {self.title}"
+        return f"<Book {self.id}>: {self.title}"
 
 
 class Device(db.Model):
@@ -131,7 +132,7 @@ class Device(db.Model):
     # items = db.relationship("Item", backref="device", lazy=True, primaryjoin="foreign(Item.sub_item_id) == Device.id and Item.item_type == 'device'")
     
     def __repr__(self) -> str:
-        return f"Device: {self.name}"
+        return f"<Device {self.id}>: {self.name}"
     
 #===========================
 # Working with Simple Models
@@ -220,6 +221,8 @@ def deleteSimpleSeeds():
 #============================
     
 def seedComplexModels():
+    print()
+    print("create complex seeds")
     with app.app_context():
         newBook = Book(title="that was then, this is now")
         db.session.add(newBook)
@@ -234,10 +237,26 @@ def seedComplexModels():
 
     
 def printComplexSeeds():
+    print()
+    print("read complex seeds")
     with app.app_context():
         # read all books
         books = Item.query.filter_by(item_type="book").all()
         print(books)
+        
+
+def updateComplexSeeds():
+    print()
+    print("update complex seeds")
+    with app.app_context():
+        ...
+        
+        
+def deleteComplexSeeds():
+    print()
+    print("delete complex seeds")
+    with app.app_context():
+        ...
 
 
 
@@ -247,5 +266,7 @@ if (__name__ == "__main__"):
     updateSimpleSeeds()  # update
     deleteSimpleSeeds()  # delete
     
-    seedComplexModels()
-    printComplexSeeds()
+    seedComplexModels()  # create
+    printComplexSeeds()  # read
+    updateComplexSeeds()  # update
+    deleteComplexSeeds()  # delete
