@@ -16,9 +16,11 @@ db = SQLAlchemy(app)  # attach the SQLAlchemy instance to our flask app instance
 
 
 
-#=========================
+#==============
+# Simple models
+#==============
+
 # One-to-many relationship
-#=========================
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -43,10 +45,10 @@ class Post(db.Model):
     
     def __repr__(self):
         return f"<Post {self.id}>: {self.title}"
-    
-#==========================
+
+
+
 # Many-to-many relationship
-#==========================
 
 # An intermediary table is required to track both Models
 viewer_channel = db.Table(
@@ -74,78 +76,22 @@ class Channel(db.Model):
     
     def __repr__(self) -> str:
         return f"<Channel {self.id}>: {self.name}"
-            
-#=========================
-# Joined Table Inheritance (?)
-#=========================
-
-class Item(db.Model):
-    """
-    This is the "instances" Model, which tracks all of the physical copies of inventory.
-    It contains only data that is common to all inventory (such as availability and
-    inventory serials). Each entry is tied to another child table, like Book or Device.
-    
-    This requires more manual handling of queries, but cuts down on complexity in the ORM.
-    """
-    
-    id = db.Column(db.Integer, primary_key=True)    
-    item_type = db.Column(db.String(20), nullable=False)
-    sub_item_id = db.Column(db.Integer, nullable=False)
-    inventory_serial = db.Column(db.String(20), nullable=False)
-    is_availabile = db.Column(db.Boolean, nullable=False, default=True)
-    
-    def __repr__(self):
-        return f"<Item {self.id}>: type: {self.item_type}, serial: {self.inventory_serial}"
-    
-
-class Book(db.Model):
-    """
-    This is a "data" Model. It tracks the unique Book items that the inventory contains,
-    without any regard for the number of copies available or any other property that is
-    specific to a single INSTANCE of a book.
-    
-    It is structured this way to avoid data duplication (and thus data entry errors) if
-    there are multiple copies of a book. Each copy will have an entry in the Item Model, and
-    all of the copies will reference this Book entry.
-    """
-    
-    id = db.Column(db.Integer, primary_key=True)    
-    title = db.Column(db.String(50), nullable=False)
-    
-    # causes a conflict due to overlapping on the Item.sub_item_id column with Device
-    # items = db.relationship("Item", backref="book", lazy=True, primaryjoin="foreign(Item.sub_item_id) == Book.id and Item.item_type == 'book'")
-    
-    def __repr__(self) -> str:
-        return f"<Book {self.id}>: {self.title}"
-
-
-class Device(db.Model):
-    """
-    This is another "data" Model, similiar to Book.
-    """
-    
-    # __tablename__ = "devices"
-    
-    id = db.Column(db.Integer, primary_key=True)    
-    name = db.Column(db.String(50), nullable=False)
-    
-    # items = db.relationship("Item", backref="device", lazy=True, primaryjoin="foreign(Item.sub_item_id) == Device.id and Item.item_type == 'device'")
-    
-    def __repr__(self) -> str:
-        return f"<Device {self.id}>: {self.name}"
     
 #===========================
 # Working with Simple Models
 #===========================
 
-def seedDatabaseWithSimpleModels():
-    print()
-    print("create simple seeds")
+def makeFreshDatabase():
     with app.app_context():
         # create fresh, empty database every time it starts
         db.drop_all()
         db.create_all()
-        
+    
+
+def seedDatabaseWithSimpleModels():
+    print()
+    print("create simple seeds")
+    with app.app_context():
         # create one-to-many samples
         user1 = User(name="jeff")
         user2 = User(name="jr")
@@ -207,14 +153,93 @@ def deleteSimpleSeeds():
     print()
     print("delete simple seeds")
     with app.app_context():
+        # hard delete
         print(Channel.query.all())
-        
         channel = Channel.query.filter_by(name="ChilledChaosGames").first()
         if channel:
             db.session.delete(channel)
             db.session.commit()
-        
         print(Channel.query.all())
+        
+        # soft delete
+            
+#==================
+# Complex models
+# Model Inheritance
+#==================
+
+class Item(db.Model):
+    """
+    This is the "instances" Model, which tracks all of the physical copies of inventory.
+    It contains only data that is common to all inventory (such as availability and
+    inventory serials). Each entry is tied to another child table, like Book or Device.
+    
+    Each item type requires its own relationship and foriegn key column, but it makes
+    handling them much easier (if not simpler).
+    """
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # shared properties among all inventory
+    inventory_serial = db.Column(db.String(20), nullable=False)
+    is_availabile = db.Column(db.Boolean, nullable=False, default=True)
+    deleted_at = db.Column(db.DateTime, nullable=True, default=None)
+    
+    item_type = db.Column(db.String(20), nullable=False)  # discriminator column
+    
+    # separate foreign keys for each item type
+    book_id = db.Column(db.Integer, db.ForeignKey("book.id"), nullable=True)
+    device_id = db.Column(db.Integer, db.ForeignKey("device.id"), nullable=True)
+    
+    # separate relationships for each item type
+    book = db.relationship("Book", backref="instances")
+    device = db.relationship("Device", backref="instances")
+    
+    @classmethod
+    def getDeleted(cls):
+        return cls.query.filter(cls.deleted_at != None)
+    
+    def __repr__(self):
+        return f"<Item {self.id}>: type: {self.item_type}, serial: {self.inventory_serial}"
+    
+
+class Book(db.Model):
+    """
+    This is a "definition" Model. It tracks the unique Book items that the inventory contains,
+    without any regard for the number of copies available or any other property that is
+    specific to a single INSTANCE of a book.
+    
+    It is structured this way to avoid data duplication (and thus data entry errors) if
+    there are multiple copies of a book. Each copy will have an entry in the Item Model, and
+    all of the copies will reference this Book model.
+    """
+    
+    id = db.Column(db.Integer, primary_key=True)    
+    title = db.Column(db.String(50), nullable=False)
+    retired_at = db.Column(db.DateTime, nullable=True, default=None)
+    
+    # causes a conflict due to overlapping on the Item.sub_item_id column with Device
+    # items = db.relationship("Item", backref="book", lazy=True, primaryjoin="foreign(Item.sub_item_id) == Book.id and Item.item_type == 'book'")
+    
+    def __repr__(self) -> str:
+        return f"<Book {self.id}>: {self.title}"
+
+
+class Device(db.Model):
+    """
+    This is another "definition" Model, similiar to Book.
+    """
+    
+    # __tablename__ = "devices"
+    
+    id = db.Column(db.Integer, primary_key=True)    
+    name = db.Column(db.String(50), nullable=False)
+    retired_at = db.Column(db.DateTime, nullable=True, default=None)
+    
+    # items = db.relationship("Item", backref="device", lazy=True, primaryjoin="foreign(Item.sub_item_id) == Device.id and Item.item_type == 'device'")
+    
+    def __repr__(self) -> str:
+        return f"<Device {self.id}>: {self.name}"
     
 #============================
 # Working with Complex Models
@@ -224,15 +249,17 @@ def seedComplexModels():
     print()
     print("create complex seeds")
     with app.app_context():
-        newBook = Book(title="that was then, this is now")
-        db.session.add(newBook)
+        book1 = Book(title="that was then, this is now")
+        book2 = Book(title="i love python")
+        db.session.add_all([book1, book2])
         newDevice = Device(name="YI Home Camera")
         db.session.add(newDevice)
         db.session.commit()
         
         #! newBook.id can only be referenced after newBook has been comitted to the database
-        bookInstance = Item(item_type="book", sub_item_id=newBook.id, inventory_serial="ICF-1000")
-        db.session.add(bookInstance)
+        bookInstance1 = Item(item_type="book", book=book1, inventory_serial="ICF-1000")
+        bookInstance2 = Item(item_type="book", book=book2, inventory_serial="ICF-1001")
+        db.session.add_all([bookInstance1, bookInstance2])
         db.session.commit()
 
     
@@ -241,8 +268,14 @@ def printComplexSeeds():
     print("read complex seeds")
     with app.app_context():
         # read all books
-        books = Item.query.filter_by(item_type="book").all()
-        print(books)
+        bookInstances = Item.query.filter_by(item_type="book").all()
+        print(bookInstances)
+        
+        # read all instances of a single book
+        bookInstances = Book.query.filter_by(title="that was then, this is now").first().instances
+        for bookInstance in bookInstances:
+            print(f"{bookInstance}, title: {bookInstance.book.title}")
+        
         
 
 def updateComplexSeeds():
@@ -261,10 +294,12 @@ def deleteComplexSeeds():
 
 
 if (__name__ == "__main__"):
-    seedDatabaseWithSimpleModels()  # create
-    printSimpleSeeds()  # read
-    updateSimpleSeeds()  # update
-    deleteSimpleSeeds()  # delete
+    makeFreshDatabase()
+    
+    # seedDatabaseWithSimpleModels()  # create
+    # printSimpleSeeds()  # read
+    # updateSimpleSeeds()  # update
+    # deleteSimpleSeeds()  # delete
     
     seedComplexModels()  # create
     printComplexSeeds()  # read
