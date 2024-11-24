@@ -14,14 +14,152 @@ app = Flask("SQLAlchemy Testing")  # start the flask app
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.sqlite"  # specify the database location/name
 db = SQLAlchemy(app)  # attach the SQLAlchemy instance to our flask app instance
 
+############################
+# Model relationship options
+############################
+
+#==========================
+# Backref vs back_populates
+#==========================
+
+# Using backref:
+class Artist1(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    paintings = db.relationship('Painting1', backref='artist')
+    
+class Painting1(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey('artist1.id'))
+    # 'artist' attribute is automatically created
+
+# Using back_populates:
+class Author1(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    books = db.relationship('Book1', back_populates='author')
+    
+class Book1(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    author1_id = db.Column(db.Integer, db.ForeignKey('author1.id'))
+    author2_id = db.Column(db.Integer, db.ForeignKey('author2.id'))
+    author3_id = db.Column(db.Integer, db.ForeignKey('author3.id'))
+    
+    # Must explicitly declare both sides
+    author = db.relationship('Author1', back_populates='books')
+    
+#=====================
+# Lazy loading options
+#=====================
+
+class Author2(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+
+# 1. lazy='select' (default)
+    books = db.relationship('Book1', lazy='select')
+    """
+    - Loads related data only when accessed
+    - Generates new SQL query when relationship is accessed
+    - Can lead to N+1 query problem
+    """
+    # Example of N+1 problem:
+        # authors = Author.query.all()  # First query
+        # for author in authors:
+        #     print(len(author.books))  # New query for EACH author!
+
+# 2. lazy='joined'
+    books = db.relationship('Book1', lazy='joined')
+    """
+    - Loads related data immediately with JOIN
+    - Single SQL query loads all data
+    - Best when you know you'll need the related data
+    """
+    # Example:
+        # author = Author.query.first()  # Loads author AND books in one query
+        # print(len(author.books))  # No additional query needed
+
+# 3. lazy='dynamic'
+    books = db.relationship('Book1', lazy='dynamic')
+    """
+    - Returns SQLAlchemy query object instead of results
+    - Allows adding filters before loading data
+    - Good for relationships with many records
+    """
+    # Examples:
+        # author = Author.query.first()
+    
+        # Get recent books only
+            # recent_books = author.books.filter(Book.published_date > last_month).all()
+    
+        # Get count without loading all records
+            # book_count = author.books.count()
+    
+        # Complex filtering
+            # popular_books = author.books\
+            #     .filter(Book.rating > 4)\
+            #     .order_by(Book.published_date.desc())\
+            #     .limit(5)\
+            #     .all()
+
+# 4. lazy='subquery'
+    books = db.relationship('Book1', lazy='subquery')
+    """
+    - Loads all relationship data in a separate query
+    - Good for loading relationships across multiple parents
+    - Uses a subquery to fetch related data
+    """
+    # Example:
+        # authors = Author.query.all()  # First query for authors
+        
+        
+        # for author in authors:  # Single additional query loads books for ALL authors
+        #     print(len(author.books))  # No additional queries
+    
+#================
+# Cascade options
+#================
+
+class Author3(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Different cascade options:
+    
+    # "all" - Includes all cascade options except delete-orphan
+    books = db.relationship('Book1', cascade="all")
+    
+    # "all, delete-orphan" - Like "all" but also deletes orphaned records
+    books = db.relationship('Book1', cascade="all, delete-orphan")
+    # Example:
+        # author = Author.query.first()
+        # db.session.delete(author)  # This will also delete all associated books
+    
+    # Individual cascade options:
+    # "save-update" - When you save/update the parent, do the same to children
+    books = db.relationship('Book1', cascade="save-update")
+    
+    # "delete" - When parent is deleted, delete children
+    books = db.relationship('Book1', cascade="delete")
+    
+    # "delete-orphan" - Delete children when they're removed from relationship
+    books = db.relationship('Book1', cascade="delete-orphan, delete")  # delete must go with it
+    # Example:
+        # author.books = []  # This will delete all books
+    
+    # "merge" - When merging parent, merge children
+    books = db.relationship('Book1', cascade="merge")
+    
+    # Multiple options can be combined
+    books = db.relationship('Book1', cascade="save-update, delete")
 
 
-#==============
+###############
 # Simple models
-#==============
+###############
 
+#=========================
 # One-to-many relationship
+#=========================
 
+# "one" side of one-to-many relationship
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), unique=True, nullable=False)
@@ -29,12 +167,12 @@ class User(db.Model):
     # not an actual column. references the class, so note the capital "Post." creates an ORM pseudo-column that can be used on Post
     # to access the entire User object
     # the lazy keyword signifies that when fetching the object, it will also fetch all of the associated objects (Posts in this case)
-    posts = db.relationship("Post", backref="author", lazy=True)  # one-to-many relationship
+    posts = db.relationship("Post", backref="author", lazy=True)
     
     def __repr__(self):
         return f"<User {self.id}>: {self.name}, posts: {self.posts}"
-    
-    
+
+# "many" side of one-to-many relationship
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(50), nullable=False)
@@ -46,9 +184,9 @@ class Post(db.Model):
     def __repr__(self):
         return f"<Post {self.id}>: {self.title}"
 
-
-
+#==========================
 # Many-to-many relationship
+#==========================
 
 # An intermediary table is required to track both Models
 viewer_channel = db.Table(
@@ -163,10 +301,10 @@ def deleteSimpleSeeds():
         
         # soft delete
             
-#==================
+###################
 # Complex models
 # Model Inheritance
-#==================
+###################
 
 class Item(db.Model):
     """
