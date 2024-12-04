@@ -28,8 +28,19 @@ dic = dict(zip(keys, values))
 print(dic)
 print()
 
+# combine dictionaries
+dict1 = {1: "one", 2: "two"}
+dict2 = {3: "three", 4: "four"}
+print({**dict1, **dict2})
+print()
+
 # key-value pairs do not have to match each other's data types, and can in fact store lists or other dictionaries
-programs = {"JS": "Atom", "CS": "VS", "Python": ["PyCharm", "Sublime"], "Java": {"JSE": "NetBeans", "JEE": "Eclipse"}}
+programs = {
+    "JS": "Atom",
+    "CS": "VS",
+    "Python": ["PyCharm", "Sublime"],
+    "Java": {"JSE": "NetBeans", "JEE": "Eclipse"}
+}
 print(programs["Python"])
 print(programs["Python"][1])
 print(programs["Java"]["JEE"])
