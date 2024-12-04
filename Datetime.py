@@ -36,6 +36,18 @@ madeAwareDatetime = naiveDatetime.replace(tzinfo=timezoneCst)
 print("naive datetime made aware:", madeAwareDatetime)
 print()
 
+# get difference in days between 2 dates
+currentTime = datetime.datetime.now()
+currentTimePlus23 = currentTime + datetime.timedelta(hours=23)
+currentTimePlus24 = currentTime + datetime.timedelta(hours=24)
+hoursRemaining = (currentTimePlus23 - currentTime).days
+dayRemaining = (currentTimePlus24 - currentTime).days
+print("hours minutes and seconds:", currentTime.time())
+print("just the date:", currentTime.date())
+print("with less than 1 day remaining:", hoursRemaining)
+print("with exactly 1 day remaining:", dayRemaining)
+print()
+
 # convert datetime to different timezone's time
 convertedFromAware = awareDatetime.astimezone(datetime.timezone.utc)
 convertedFromNaive = naiveDatetime.astimezone(datetime.timezone.utc)
