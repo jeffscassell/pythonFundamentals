@@ -202,7 +202,7 @@ class Viewer(db.Model):
     
     # adds pseudo-column "following" on Viewer, and pseudo-column "followers" on Channel
     # both can be manipulated as if they were lists
-    following = db.relationship("Channel", secondary=viewer_channel, backref="followers")
+    following = db.relationship("Channel", secondary=viewer_channel, back_populates="followers")
     
     def __repr__(self):
         return f"<Viewer {self.id}>: {self.name}, following: {self.following}"
@@ -211,6 +211,8 @@ class Viewer(db.Model):
 class Channel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), nullable=False)
+    
+    followers = db.relationship("Viewer", secondary=viewer_channel, back_populates="following")
     
     def __repr__(self) -> str:
         return f"<Channel {self.id}>: {self.name}"
@@ -282,7 +284,8 @@ def updateSimpleSeeds():
     with app.app_context():
         channel1 = Channel.query.filter_by(name="ChilledChaos").first()
         print(channel1)
-        channel1.name = "ChilledChaosGames"
+        if channel1:
+            channel1.name = "ChilledChaosGames"
         print(channel1)
         db.session.commit()
 
