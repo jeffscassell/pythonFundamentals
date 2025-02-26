@@ -15,7 +15,6 @@ print("aware datetime:", awareDatetime)
 # 1 day ahead of today
 print("1 day ahead:", datetime.datetime.now() + datetime.timedelta(days=1))
 
-
 # current time in UTC timezone
 print("current datetime in UTC timezone:", datetime.datetime.now(datetime.timezone.utc))
 
@@ -31,25 +30,31 @@ formattedDatetime = awareDatetime.strftime("%B %d, %Y - %I:%M %p UTC%z")  # 12-h
 print(formattedDatetime)
 print()
 
-# make naive datetime aware
+# make naive datetime aware (give the Datetime a timezone, so doesn't change time)
+print("making datetimes aware")
 madeAwareDatetime = naiveDatetime.replace(tzinfo=timezoneCst)
-print("naive datetime made aware:", madeAwareDatetime)
+print("naive datetime given a timezone and made aware:", madeAwareDatetime)
+print()
+
+# convert aware datetime from one timezone to another
+currentUtcDatetime = datetime.datetime.now(datetime.timezone.utc)
+print("current time in UTC:", currentUtcDatetime)
+currentCSTDatetime = currentUtcDatetime.astimezone(timezoneCst)
+print("current time in CST:", currentCSTDatetime)
+
+# converting naive datetimes to different timezones is also possible (just assumes naive is in local timezone)
+convertedFromNaive = naiveDatetime.astimezone(datetime.timezone.utc)
+print("also works with naive datetimes, just assumes it is in system's local timezone:", convertedFromNaive)
 print()
 
 # get difference in days between 2 dates
 currentTime = datetime.datetime.now()
 currentTimePlus23 = currentTime + datetime.timedelta(hours=23)
 currentTimePlus24 = currentTime + datetime.timedelta(hours=24)
-hoursRemaining = (currentTimePlus23 - currentTime).days
-dayRemaining = (currentTimePlus24 - currentTime).days
+withHoursRemaining = (currentTimePlus23 - currentTime).days
+withDayRemaining = (currentTimePlus24 - currentTime).days
 print("hours minutes and seconds:", currentTime.time())
 print("just the date:", currentTime.date())
-print("with less than 1 day remaining:", hoursRemaining)
-print("with exactly 1 day remaining:", dayRemaining)
+print("with less than 1 day remaining:", withHoursRemaining)
+print("with exactly 1 day remaining:", withDayRemaining)
 print()
-
-# convert datetime to different timezone's time
-convertedFromAware = awareDatetime.astimezone(datetime.timezone.utc)
-convertedFromNaive = naiveDatetime.astimezone(datetime.timezone.utc)
-print("datetime conversion to different timezone:", convertedFromAware)
-print("also works with naive datetimes, just assumes it is in system's local timezone:", convertedFromNaive)
