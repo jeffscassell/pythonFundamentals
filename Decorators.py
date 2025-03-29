@@ -6,19 +6,22 @@ from functools import wraps
 # Decorators:
 # Usually a type of closure function (see Closures.py) to dynamically alter or add to the functionality of a wrapped function.
 
-def decoratorFunction(function: Callable) -> Callable:
+def decoratorFunction(wrappedFunction: Callable) -> Callable:
     
-    # this "*args" and "**kwargs" allows us to wrap functions that also accept arguments and pass those arguments along
-    def wrapperFunction(*args, **kwargs):
+    # Preserves the function.__name__ for various uses (readability/debugging/logging/etc.).
+    # Mostly useful when adding multiple decorators (nesting), but best practice is to always use it for future-proofing.
+    @wraps(wrappedFunction)
+    # This "*args" and "**kwargs" allows us to wrap functions that also accept arguments and pass those arguments along
+    def wrapper(*args, **kwargs):
         print("Wrapper function ran")
-        return function(*args, **kwargs)
+        return wrappedFunction(*args, **kwargs)
         
-    return wrapperFunction
+    return wrapper
 
 
-# this decorator is the same thing as:
+# This decorator is the same thing as:
 #   decoratedDisplay = decoratorFunction(displayFunction)
-# and then calling decoratedDisplay()
+# and then calling decoratedDisplay().
 @decoratorFunction
 def display():
     print("Display function ran")
@@ -37,23 +40,21 @@ print()
 
 # Stacking decorators
 
-def firstDecoratorFunction(function: Callable) -> Callable:
+def firstDecoratorFunction(wrappedFunction: Callable) -> Callable:
     
-    # preserves the function.__name__ for various uses (readability/debugging/logging/etc.)
-    # mostly useful when adding multiple decorators (nesting), but best practice to always use regardless for future-proofing
-    @wraps(function)
+    @wraps(wrappedFunction)
     def wrapper(*args, **kwargs):
         print("First decorator ran")
-        return function(*args, **kwargs)
+        return wrappedFunction(*args, **kwargs)
         
     return wrapper
 
-def secondDecoratorFunction(function: Callable) -> Callable:
+def secondDecoratorFunction(wrappedFunction: Callable) -> Callable:
     
-    @wraps(function)
+    @wraps(wrappedFunction)
     def wrapper(*args, **kwargs):
         print("Second decorator ran")
-        return function(*args, **kwargs)
+        return wrappedFunction(*args, **kwargs)
         
     return wrapper
 
@@ -68,8 +69,8 @@ print()
 
 
 
-# Decorators can also be implemented with classes, but they're less common
-# the benefit is they have added functionality, should it be required
+# Decorators can also be implemented with classes, but they're less common.
+# The benefit is they have added functionality, should it be required.
 
 class DecoratorClass(object):
     function: Callable
@@ -92,16 +93,19 @@ print()
 
 
 
-# Decorators that take arguments
+# Decorators can take arguments, too.
 
 def argumentDecorator(argument) -> Callable:
-    def decoratorFunction(function: Callable) -> Callable:
-        @wraps(function)
+    
+    def decoratorFunction(wrappedFunction: Callable) -> Callable:
+        
+        @wraps(wrappedFunction)
         def wrapper(*args, **kwargs):
             print("Ran wrapper function with argument:", argument)
-            return function(*args, **kwargs)
+            return wrappedFunction(*args, **kwargs)
         
         return wrapper
+    
     return decoratorFunction
 
 
