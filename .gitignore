@@ -1,2 +1,4 @@
 __pycache__/
 venvAlchemy/
+.venv/
+.pytest_cache/
