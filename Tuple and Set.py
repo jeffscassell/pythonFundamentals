@@ -6,7 +6,7 @@ tup = (10, 20, 30, 15, 12)
 
 # attempting to add another value will throw an error
 try:
-    tup[0] = 0
+    tup[0] = 0  # type: ignore
 except TypeError:
     print("tuples cannot be changed (they are immutable)")
 
@@ -22,6 +22,6 @@ print(s)
 
 # cannot use indexing
 try:
-    s[0]
+    s[0]  # type: ignore
 except TypeError:
     print("sets do not support indexing (subscripting)")

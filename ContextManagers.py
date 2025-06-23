@@ -19,12 +19,12 @@ except:
 
 
 try:
-    file.write("some test string here, blah blah blah")
+    file.write("some test string here, blah blah blah")  # type: ignore
 except Exception as error:
     print("An error occurred while trying to write to file: context.txt")
     print(error)
 finally:
-    file.close()
+    file.close()  # type: ignore
     
 #===============
 # With statement
