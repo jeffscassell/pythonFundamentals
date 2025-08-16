@@ -1,10 +1,10 @@
-from ..src.animals import Cat, Dog
+from src.animals import Cat, Dog
 
 import pytest
 
 
 
-### FIXTURES
+### FIXTURES ###
 
 @pytest.fixture
 def baseCat():
@@ -19,7 +19,7 @@ def baseDog():
 def animals(baseDog, baseCat):
     return [baseDog, baseCat]
 
-### TESTS
+### TESTS ###
 
 # calls a simple fixture
 def test_catMeows(baseCat):
