@@ -1,5 +1,5 @@
 # Tuple
-# immutable
+# Essentially, immutable version of a list.
 
 # tuples use parenthesis instead of list's square bracket
 tup = (10, 20, 30, 15, 12)
