@@ -1,4 +1,4 @@
-from src.animals import Cat, Dog
+from packageName.animals import Cat, Dog
 
 import pytest
 
