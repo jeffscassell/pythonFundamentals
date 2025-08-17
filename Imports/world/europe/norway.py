@@ -1,0 +1,1 @@
+print("Norway says hello")
