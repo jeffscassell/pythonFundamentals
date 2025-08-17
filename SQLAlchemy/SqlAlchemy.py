@@ -167,7 +167,7 @@ class User(db.Model):
     # not an actual column. references the class, so note the capital "Post." creates an ORM pseudo-column that can be used on Post
     # to access the entire User object
     # the lazy keyword signifies that when fetching the object, it will also fetch all of the associated objects (Posts in this case)
-    posts = db.relationship("Post", backref="author", lazy=True)
+    posts = db.relationship("Post", backref="author", lazy=True)  # one-to-many relationship -- the many side
     
     def __repr__(self):
         return f"<User {self.id}>: {self.name}, posts: {self.posts}"
@@ -179,7 +179,7 @@ class Post(db.Model):
     date_posted = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now(datetime.timezone.utc))
     
     # IS an actual column, so references the table, which is automatically created/converted to snake_case. note the "user.id"
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)  # one-to-many relationship -- the one side
     
     def __repr__(self):
         return f"<Post {self.id}>: {self.title}"
