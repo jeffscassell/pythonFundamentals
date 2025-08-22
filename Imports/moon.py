@@ -1,4 +1,4 @@
-from .world.europe.greece import get
+from world.europe.greece import get
 
 
 
