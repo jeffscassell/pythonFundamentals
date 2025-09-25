@@ -89,10 +89,25 @@ when it comes to import shenanigans.
 
 ```powershell
 PS D:\!Backup\Programming\Python> python Fundamentals/Imports/syspath.py
-['D:\\!Backup\\Programming\\Python\\Fundamentals\\Imports', ...]
+'D:\!Backup\Programming\Python\Fundamentals\Imports'
 
 PS D:\!Backup\Programming\Python> python -m Fundamentals.Imports.syspath
-['D:\\!Backup\\Programming\\Python', ...]
+'D:\!Backup\Programming\Python'
+
+# Similarly...
+
+PS D:\!Backup\Programming\Python> python Fundamentals/Imports/moon.py
+"Greece says hello"
+"Norway says hello"
+"You got it"
+
+PS D:\!Backup\Programming\Python> python -m Fundamentals.Imports.moon
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "D:\!Backup\Programming\Python\Fundamentals\Imports\moon.py", line 1, in <module>
+    from world.europe.greece import get
+ModuleNotFoundError: No module named 'world'
 ```
 
 This can cause problems depending on how imports are being handled within the modules.
@@ -163,3 +178,7 @@ python -m pip install -e .
 
 The `-e` option means editable, so that if the package changes it doesn't need to be installed
 all over again. Changes are reflected immediately.
+
+**NOTE:**
+This requires that the package have either a `setup.py` or `pyproject.toml` configured.
+See my notes on this subject in `Fundamentals/PackagingProject`.
