@@ -1,14 +1,19 @@
+"""
+# SQLAlchemy (for Flask)
+
+I would rather learn base SQLAlchemy as it's more generic and learning it would be more
+agnostic compared to the Flask-specific variant, but this is for work and
+I just need to get this project done already. Will hopefully update this with
+the base version later.
+"""
+
 import datetime
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 
 
-# Flask-SQLAlchemy
-
-# I would rather learn base SQLAlchemy as it's more generic and learning it would be more
-# agnostic compared to the Flask-specific variant, but this is for work and
-# I just need to get this project done already.
 
 app = Flask("SQLAlchemy Testing")  # start the flask app
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.sqlite"  # specify the database location/name
