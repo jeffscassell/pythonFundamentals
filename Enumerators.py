@@ -1,15 +1,17 @@
-from enum import IntEnum, StrEnum, Enum
+"""
+Enum (enumerator)
+Used when there are going to be set values used repeatedly and you want to avoid mistyping something.
+Ensures consistency and readability across a codebase
+
+It is always recommended to use the StrEnum or IntEnum classes, rather than the base Enum class, so its use
+is more explicit and so that you can use the values directly.
+e.g., StatusCodes.OK will insert the literal integer value 200, without having to implement anything beyond the key/value pairs,
+whereas this is not the case if your class is using Enum
+"""
+
+from enum import IntEnum, Enum
 
 
-
-# Enum (enumerator)
-# Used when there are going to be set values used repeatedly and you want to avoid mistyping something.
-# Ensures consistency and readability across a codebase
-
-# It is always recommended to use the StrEnum or IntEnum classes, rather than the base Enum class, so its use
-# is more explicit and so that you can use the values directly.
-# e.g., StatusCodes.OK will insert the literal integer value 200, without having to implement anything beyond the key/value pairs,
-# whereas this is not the case if your class is using Enum
 
 class IntStatusCodes(IntEnum):
     OK = 200
@@ -42,3 +44,6 @@ if (200 in BaseStatusCodes):
 
 print("IntEnum member:", IntStatusCodes.OK)
 print("Enum member:", BaseStatusCodes.OK)
+
+print("Accessing members by name:", BaseStatusCodes.OK)
+print("Accessing members by value:", BaseStatusCodes(200))
