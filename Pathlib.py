@@ -7,6 +7,7 @@ Each object (Path) has helpful methods to aid in this goal.
 
 from pathlib import Path, PurePosixPath
 from datetime import datetime
+import shutil
 
 
 
@@ -24,8 +25,8 @@ userHomeDirectory = Path.home()
 print("Home directory:", userHomeDirectory)
 
 posixPath = PurePosixPath("/home/jeff/scripts/update.sh")
-print("To instantiate a path for a different platform, a pure path may be used "
-    "(no IO capabilities):", posixPath)
+print("To instantiate a path for a different platform, a pure path may be used \
+    (no IO capabilities):", posixPath)
 print()
 
 
@@ -103,9 +104,15 @@ with module.open("rt") as infile:
 # NOTE: It also has built-in methods for writing text, and both
 # reading/writing bytes.
 print("Using Path's built-in .read_text() method:",
-    module.read_text().splitlines()[1]
-)
+    module.read_text().splitlines()[1])
 print()
+
+
+# Check Path properties.
+print(f"Check if module is a file: {module.is_file()}")
+print(f"Check if module is a directory: {module.is_dir()}")
+print(f"Check if module's parent is a directory: {module.parent.is_dir()}")
+
 
 ## Create a file.
 originalFile = Path.cwd() / "original_file.txt"
@@ -114,14 +121,14 @@ print("New file exists with .touch():", originalFile.exists())  # True
 # !WARNING: Overwrites the file if it already exists.
 originalFile.write_text("some text")
 
+
 ## Rename/move a file.
 newFile = originalFile.with_stem("new_file")
 # !WARNING: Overwrites the file if it already exists.
 originalFile.write_text("some text")
 originalFile.replace(newFile)
 print("Rename/move a file with .replace(): Does old file still exist:",
-    originalFile.exists()
-)  # False
+    originalFile.exists())  # False
 
 # To protect against accidental overwrites AND a race condition:
 try:
@@ -132,9 +139,39 @@ except FileExistsError:
 else:
     originalFile.unlink()
 
-## Delete a file. Delete a directory with .rmdir() -- must be empty.
-newFile.unlink()  # Use .rmdir() for directories.
-print("Delete files with .unlink(): does new file still exist:", newFile.exists())  # False
+
+## Move the _contents_ of an entire directory to another directory.
+# First, create the example data to be moved.
+srcDir = currentWorkingDirectory / "pathlib_src_example"
+if not srcDir.exists(): srcDir.mkdir()
+srcDir.joinpath("file1.txt").touch()
+if not srcDir.joinpath("subdir").exists(): srcDir.joinpath("subdir").mkdir()
+srcDir.joinpath("subdir", "file2.txt").touch()
+destDir = currentWorkingDirectory / "pathlib_dest_example"
+if not destDir.exists(): destDir.mkdir()
+
+for file in srcDir.iterdir():
+    if not destDir.joinpath(file.name).exists():  # Don't overwrite files.
+        file.replace(destDir / file.name)
+
+
+
+## Delete a file.
+newFile.unlink()
+print("Delete files with .unlink(): does new file still exist:",
+    newFile.exists())  # False
+
+
+## Delete an entire directory.
+# #! WARNING: Really, you just shouldn't use `pathlib` for this job,
+# because the directory being deleted must be empty. Use `shutil` instead.
+try:
+    srcDir.rmdir()
+except OSError:
+    print("Directory is not empty!:", srcDir)
+    shutil.rmtree(srcDir)
+shutil.rmtree(destDir)
+
 
 ## Copying files is possible, but a little roundabout using Paths.
 originalFile = Path.cwd() / "original_file.txt"
@@ -146,21 +183,19 @@ originalFile.unlink()
 copyFile.unlink()
 print()
 
+
+# More advanced file handling operations.
 print("Determine if a match exists (*.py) at the end of the path:",
-    module.match("*.py")
-)
+    module.match("*.py"))
 print("And with *.txt:", module.match("*.txt"))
 # NOTE: .rglob() will recurse through subdirectories and
 # do the same thing as .glob() within each directory.
-print("Similar to .match() is .glob(), but only works on directories and "
-    "returns the matching items instead of True/False: "
-    "module.parent.glob('*.txt'):",
-    sorted(module.parent.glob("*.txt"))
-)
+print("Similar to .match() is .glob(), but only works on directories and \
+    returns the matching items instead of True/False: \
+    module.parent.glob('*.txt'):",
+    sorted(module.parent.glob("*.txt")))
 # .iterdir() does not recurse.
 print(".iterdir() just enumerates an entire directory:",
-    sorted(module.parent.iterdir())[0:2], "..."
-)
+    sorted(module.parent.iterdir())[0:2], "...")
 print("Advanced operations are also possible with .stat(): last modified:",
-    datetime.fromtimestamp(module.stat().st_mtime)
-)
+    datetime.fromtimestamp(module.stat().st_mtime))
